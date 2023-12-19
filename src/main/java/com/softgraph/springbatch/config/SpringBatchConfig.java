@@ -24,9 +24,9 @@ import org.springframework.core.task.TaskExecutor;
 @EnableBatchProcessing
 @AllArgsConstructor
 public class SpringBatchConfig {
-
+//33/07
     private JobBuilderFactory jobBuilderFactory;
-    private StepBuilderFactory stepBuiilderFactory;
+    private StepBuilderFactory stepBuilderFactory;
     private CustomerRepository customerRepository;
 
     public FlatFileItemReader<Customer> reader() {
@@ -67,5 +67,33 @@ public class SpringBatchConfig {
         writer.setMethodName("save"); // We specified the method to use in the repository
 
         return writer;
+    }
+
+    @Bean
+    public Step step1() {
+        return stepBuilderFactory // We create the job step
+                .get("csv-step") // We get the step by his name
+                .<Customer, Customer>chunk(10) // We specified the chunk size: number of element to process at a time
+                .reader(reader())
+                .processor(processor())
+                .writer(writer())
+                .taskExecutor(taskExecutor())
+                .build();
+    }
+
+    @Bean
+    public Job runjob() {
+        return jobBuilderFactory
+                .get("importCustomers")
+                .flow(step1())
+                .end()
+                .build();
+    }
+
+    public TaskExecutor taskExecutor() {
+        SimpleAsyncTaskExecutor asyncTaskExecutor = new SimpleAsyncTaskExecutor();
+        asyncTaskExecutor.setConcurrencyLimit(10); // We specified the number of thread that will run simultanously.
+
+        return asyncTaskExecutor;
     }
 }

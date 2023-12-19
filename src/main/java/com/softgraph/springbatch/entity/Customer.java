@@ -11,6 +11,9 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "customer")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Customer {
 
     @Id
